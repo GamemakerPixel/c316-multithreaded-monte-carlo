@@ -3,6 +3,7 @@ package pimontecarlo;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 public class MultiThreadedPiApproximatorWithoutLock extends PiApproximator{
@@ -26,10 +27,19 @@ public class MultiThreadedPiApproximatorWithoutLock extends PiApproximator{
         ExecutorService service = Executors.newFixedThreadPool(CORES);
         long totalPointsInCircle = 0;
         try (service) {
-            long blockCount = TOTAL_POINTS / BLOCK_SIZE;
+            int blockCount = (int) (TOTAL_POINTS / BLOCK_SIZE);
+            Future<Long>[] blockValues = new Future[blockCount];
             System.out.printf("Using %d blocks.\n", blockCount);
-            for (long blockIndex = 0; blockIndex < blockCount; blockIndex++) {
-                totalPointsInCircle += service.submit(() -> simulateCircle(BLOCK_SIZE)).get();
+            for (int blockIndex = 0; blockIndex < blockCount; blockIndex++) {
+                blockValues[blockIndex] = service.submit(() -> simulateCircle(BLOCK_SIZE));
+            }
+
+            // If we call .get in the previous for loop, it would force the loop to wait for the thread to return a
+            // value, essentially turning this implementation into a worse single-threaded implementation.
+            // To avoid this, we just have to submit all the tasks, and then wait for each to finish (which hopefully
+            // occurs asynchronously.)
+            for (Future<Long> futureBlockValue: blockValues) {
+                totalPointsInCircle += futureBlockValue.get();
             }
         } catch (ExecutionException e) {
             System.out.println("Execution exception in a thread");
