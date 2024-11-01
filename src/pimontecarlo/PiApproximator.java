@@ -5,15 +5,15 @@ import java.time.Instant;
 import java.util.concurrent.ThreadLocalRandom;
 
 public abstract class PiApproximator {
-    private final int totalPoints;
+    private final long totalPoints;
 
-    public PiApproximator(int totalPoints) {
+    public PiApproximator(long totalPoints) {
         this.totalPoints = totalPoints;
     }
 
     public void approximatePi() {
         Instant start = Instant.now();
-        int circlePoints = countAllPointsInside();
+        long circlePoints = countAllPointsInside();
         double pi = calculatePi(circlePoints);
         System.out.println("Pi is " + pi);
         Instant end = Instant.now();
@@ -23,12 +23,12 @@ public abstract class PiApproximator {
         System.out.println("Time taken: " + timeElapsed + "ms.");
     }
 
-    abstract int countAllPointsInside();
+    abstract long countAllPointsInside();
 
-    private static int simulateCircle(int pointCount) {
-        int countInCircle = 0;
+    protected static long simulateCircle(long pointCount) {
+        long countInCircle = 0;
 
-        for (int pointIndex = 0; pointIndex < pointCount; pointIndex++) {
+        for (long pointIndex = 0; pointIndex < pointCount; pointIndex++) {
             double x = ThreadLocalRandom.current().nextDouble(-1, 1);
             double y = ThreadLocalRandom.current().nextDouble(-1, 1);
 
@@ -36,6 +36,8 @@ public abstract class PiApproximator {
                 countInCircle++;
             }
         }
+
+        return countInCircle;
     }
 
     private static boolean pointInCircle(double x, double y) {
@@ -46,5 +48,4 @@ public abstract class PiApproximator {
         return ((double) inCircle / totalPoints) * 4;
     }
 
-}
 }
